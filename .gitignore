@@ -1,0 +1,54 @@
+# === Python Virtual Environments ===
+venv/
+.venv/
+env/
+capstone_venv_py310/
+
+# === Python Cache ===
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# === AI Model Checkpoints & Weights ===
+wav2vec2_checkpoints/
+pretrained_models/
+tmp_emotion_model/*.ckpt
+*.safetensors
+*.safetensors.index.json
+
+# === Generated Output & Uploads ===
+output/
+uploads/
+
+# === Large Data & Media Files ===
+*.mp4
+*.mp3
+*.avi
+*.mov
+*.mkv
+*.zip
+*.tar.gz
+*.rar
+processed_audio.wav
+data.csv
+
+# === Node.js ===
+node_modules/
+
+# === Environment Variables ===
+.env
+.env.local
+.env.*.local
+
+# === OS Files ===
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# === IDE ===
+.vscode/
+.idea/
+*.suo
+*.user
