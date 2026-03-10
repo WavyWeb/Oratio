@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider } from "./context/ThemeContext";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -13,17 +14,22 @@ const geistMono = localFont({
 });
 
 export const metadata = {
-  title: "Eloquence",
-  description: "AI-driven public speaking tutor",
+  title: "Oratio",
+  description: "AI-driven interview & public speaking coach",
 };
+
+import Navbar from "./components/Navbar";
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider>
+          <Navbar />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

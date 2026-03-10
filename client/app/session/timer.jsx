@@ -34,7 +34,16 @@ const Timer = ({ isRecording, isPaused, reset }) => {
     }${remainingSeconds}`;
   };
 
-  return <div className="text-4xl font-bold text-white">{formatTime(seconds)}</div>;
+  return (
+    <div className="flex items-center gap-3">
+      <div className="text-5xl font-mono font-bold tracking-wider text-white/90 tabular-nums">
+        {formatTime(seconds)}
+      </div>
+      {isRecording && !isPaused && (
+        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shadow-lg shadow-red-500/50" />
+      )}
+    </div>
+  );
 };
 
 export default Timer;

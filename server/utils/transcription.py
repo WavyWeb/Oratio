@@ -1,5 +1,5 @@
 #
-# transcription.py (Fixed for Hugging Face Whisper)
+# transcription.py 
 #
 import torch
 from transformers import WhisperProcessor, WhisperForConditionalGeneration

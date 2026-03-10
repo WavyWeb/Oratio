@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { CircularProgressbar, buildStyles } from "react-circular-progressbar";
 import "react-circular-progressbar/dist/styles.css";
+import AnimatedCircularBar from "../components/AnimatedCircularBar";
 import "../components/bg.css";
 
 const Scores = ({ report }) => {
@@ -59,17 +59,13 @@ const Scores = ({ report }) => {
             className="flex bg-[#1E293B] rounded-md shadow-lg p-6 items-center gap-4"
           >
             <div className="items-center p-6">
-              <CircularProgressbar
-                value={metric.value}
-                maxValue={100}
+              <AnimatedCircularBar
                 className="w-24 h-24"
-                text={`${metric.label}`}
-                styles={buildStyles({
-                  textColor: "#fff",
-                  pathColor: metric.value > 50 ? metric.color : "#FF4500", // Red for low scores
-                  trailColor: "#333", // Dark trail color
-                  textSize: "14px",
-                })}
+                targetValue={metric.value}
+                pathColor={metric.value > 50 ? metric.color : "#FF4500"}
+                textColor="#fff"
+                trailColor="#333"
+                textSize="14px"
               />
             </div>
             <div className="w-3/4">

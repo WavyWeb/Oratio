@@ -1,10 +1,7 @@
-import os
-from dotenv import load_dotenv
 import jwt
 import bcrypt
 
-load_dotenv()
-SECRET_KEY = os.getenv('SECRET_KEY', 'eloquence_key')
+SECRET_KEY = "eloquence_key"  
 
 # Hash the password
 def hash_password(password):

@@ -1,25 +1,22 @@
-import { useState } from "react";
-import { BsFillCameraVideoFill } from "react-icons/bs"; // Video icon
+import { Video, Mic } from "lucide-react";
 
 const ToggleSwitch = ({ isVideoEnabled, setIsVideoEnabled }) => {
   return (
-    <div className="flex items-center py-4">
-      <BsFillCameraVideoFill className="text-gray-800 mr-2" size={24} />
-      <label className="relative inline-block w-12 mr-2">
-        <input
-          type="checkbox"
-          checked={isVideoEnabled}
-          onChange={() => setIsVideoEnabled(!isVideoEnabled)}
-          className="sr-only"
-        />
-        <span className="block bg-gray-300 w-12 h-6 rounded-full cursor-pointer transition"></span>
+    <div className="flex items-center gap-2">
+      <Mic size={16} className={`transition-colors ${!isVideoEnabled ? 'text-amber-400' : 'text-white/30'}`} />
+      <button
+        onClick={() => setIsVideoEnabled(!isVideoEnabled)}
+        className="relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none"
+        style={{ background: isVideoEnabled ? 'linear-gradient(135deg, #f59e0b, #ea580c)' : 'rgba(255,255,255,0.15)' }}
+      >
         <span
-          className={`absolute left-1 top-1 w-4 h-4 rounded-full bg-white transition transform ${
-            isVideoEnabled ? "translate-x-6 bg-green-400" : ""
+          className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow-md transition-transform duration-300 ${
+            isVideoEnabled ? 'translate-x-7' : 'translate-x-1'
           }`}
-        ></span>
-      </label>
-      <span className="text-neutral-200">{isVideoEnabled ? "Video Enabled" : "Audio Only"}</span>
+        />
+      </button>
+      <Video size={16} className={`transition-colors ${isVideoEnabled ? 'text-amber-400' : 'text-white/30'}`} />
+      <span className="text-white/60 text-xs font-medium ml-1">{isVideoEnabled ? 'Video' : 'Audio'}</span>
     </div>
   );
 };

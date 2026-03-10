@@ -1,110 +1,99 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
+import AnimatedCircularBar from './AnimatedCircularBar';
 import './bg.css';
+import { useDashboardData } from '../context/DashboardDataContext';
+import { useTheme } from '../context/ThemeContext';
 
 const PerformanceMetrics = () => {
-    const [scores, setScores] = useState({ pace: 0, modulation: 0, clarity: 0 });
-    const [reports, setReports] = useState({
-        voice_report: '',
-        expressions_report: '',
-        vocabulary_report: ''
-    });
+    const { overallScores } = useDashboardData();
+    const { theme } = useTheme();
+    const isDark = theme === 'dark';
+    const textColor = isDark ? '#e2e8f0' : '#0f172a';
+    const scoreTrailColor = isDark ? '#334155' : '#f1f5f9';
+    // Default/Demo Scores
+    const [scores, setScores] = useState({ pace: 80, modulation: 75, clarity: 86 });
+    const [isDemo, setIsDemo] = useState(false);
 
     useEffect(() => {
-        const fetchOverallScores = async () => {
-            const rawUserId = localStorage.getItem('userId');
-                const userId = rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null' && rawUserId.trim() !== '' ? rawUserId : null;
-                if (!userId) {
-                    console.debug('OverallScore: no valid userId, skipping overall scores fetch');
-                    return;
-                }
+        if (!overallScores) {
+            setIsDemo(true);
+            return;
+        }
 
-            try {
-                    const API = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' ? `${window.location.protocol}//${window.location.hostname}:5000` : 'http://127.0.0.1:5000');
-                    const response = await fetch(`${API}/user-reports?userId=${encodeURIComponent(userId)}`);
-                if (!response.ok) {
-                    throw new Error('Failed to fetch overall scores');
-                }
-                const data = await response.json();
-                
-                // Map the fetched data to the scores and reports state
-                setScores({
-                    pace: data.avg_voice,
-                    modulation: data.avg_expressions,
-                    clarity: data.avg_vocabulary
-                });
-
-                setReports(data.overall_reports);
-            } catch (error) {
-                console.error('Error fetching overall scores:', error);
-            }
-        };
-
-        fetchOverallScores();
-    }, []);
+        if (overallScores.avg_voice === 0 && overallScores.avg_expressions === 0 && overallScores.avg_vocabulary === 0) {
+            setIsDemo(true);
+        } else {
+            setScores({
+                pace: overallScores.avg_voice || 0,
+                modulation: overallScores.avg_expressions || 0,
+                clarity: overallScores.avg_vocabulary || 0
+            });
+            setIsDemo(false);
+        }
+    }, [overallScores]);
 
     const colors = {
-        pace: "#00C853",
-        modulation: "#FFB300",
-        clarity: "#D32F2F"
+        pace: "#e11d48", // Rose (Voice)
+        modulation: "#fb923c", // Orange (Expressions)
+        clarity: "#f59e0b" // Amber (Vocabulary)
     };
 
     return (
-        <div className="flex flex-col md:flex-row justify-center items-center gap-6 w-full p-4">
-            {/* Pace Metric */}
-            <div className="w-full md:w-1/3 pro-card text-white p-6 flex flex-col items-center gap-4">
-                <div className="w-40 h-40">
-                    <CircularProgressbar
-                        value={scores.pace}
-                        text={`${scores.pace}%`}
-                        styles={buildStyles({
-                            pathColor: colors.pace,
-                            textColor: '#ffffff',
-                            trailColor: 'rgba(255,255,255,0.06)',
-                        })}
-                    />
-                </div>
-                <p className="text-lg text-center card-title">
-                    Voice
-                </p>
-            </div>
+        <div className="w-full">
+            <h3 className="text-xl font-bold text-slate-800 dark:text-slate-100 mb-6 text-center md:text-left flex items-center justify-center md:justify-start gap-3">
+                Performance Overview
+            </h3>
 
-            {/* Modulation Metric */}
-            <div className="w-full md:w-1/3 pro-card text-white p-6 flex flex-col items-center gap-4">
-                <div className="w-40 h-40">
-                    <CircularProgressbar
-                        value={scores.modulation}
-                        text={`${scores.modulation}%`}
-                        styles={buildStyles({
-                            pathColor: colors.modulation,
-                            textColor: '#ffffff',
-                            trailColor: 'rgba(255,255,255,0.06)',
-                        })}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Voice Metric */}
+                <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center gap-4 shadow-sm">
+                    <AnimatedCircularBar
+                        className="w-32 h-32"
+                        targetValue={scores.pace}
+                        suffix="%"
+                        pathColor={colors.pace}
+                        textColor={textColor}
+                        trailColor={scoreTrailColor}
                     />
+                    <div className="text-center">
+                        <p className="text-lg font-bold text-slate-800 dark:text-white">Voice</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Avg. Score</p>
+                    </div>
                 </div>
-                <p className="text-lg text-center card-title">
-                    Expressions
-                </p>
-            </div>
 
-            {/* Clarity Metric */}
-            <div className="w-full md:w-1/3 pro-card text-white p-6 rounded-lg flex flex-col items-center gap-4">
-                <div className="w-40 h-40">
-                    <CircularProgressbar
-                        value={scores.clarity}
-                        text={`${scores.clarity}%`}
-                        styles={buildStyles({
-                            pathColor: colors.clarity,
-                            textColor: '#ffffff',
-                            trailColor: 'rgba(255,255,255,0.06)',
-                        })}
+                {/* Expressions Metric */}
+                <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center gap-4 shadow-sm">
+                    <AnimatedCircularBar
+                        className="w-32 h-32"
+                        targetValue={scores.modulation}
+                        suffix="%"
+                        pathColor={colors.modulation}
+                        textColor={textColor}
+                        trailColor={scoreTrailColor}
                     />
+                    <div className="text-center">
+                        <p className="text-lg font-bold text-slate-800 dark:text-white">Expressions</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Avg. Score</p>
+                    </div>
                 </div>
-                <p className="text-lg text-center card-title">
-                    Vocabulary
-                    </p>
+
+                {/* Vocabulary Metric */}
+                <div className="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-6 flex flex-col items-center gap-4 shadow-sm">
+                    <AnimatedCircularBar
+                        className="w-32 h-32"
+                        targetValue={scores.clarity}
+                        suffix="%"
+                        pathColor={colors.clarity}
+                        textColor={textColor}
+                        trailColor={scoreTrailColor}
+                    />
+                    <div className="text-center">
+                        <p className="text-lg font-bold text-slate-800 dark:text-white">Vocabulary</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Avg. Score</p>
+                    </div>
+                </div>
             </div>
         </div>
     );

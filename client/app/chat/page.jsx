@@ -140,13 +140,13 @@ export default function ChatPage() {
   return (
     <div>
       <Sidebar />
-      <div className="flex w-full max-h-full min-h-screen bg-[#0F172A]">
+      <div className="flex w-full max-h-full min-h-screen bg-slate-50 dark:bg-[#0F172A]">
         <div className="w-full h-full">
-          <div className="flex flex-col mx-4 mt-4 ml-16 md:ml-28">
-            <div className="w-full h-[95vh] flex flex-col rounded-lg overflow-hidden bg-[#1E293B] border border-[#334155]">
-              <div className="p-4 border-b border-[#334155]">
+          <div className="flex flex-col mx-4 mt-4 ml-32">
+            <div className="w-full h-[95vh] flex flex-col rounded-lg overflow-hidden bg-white dark:bg-[#1E293B] border border-gray-200 dark:border-[#334155]">
+              <div className="p-4 border-b border-gray-200 dark:border-[#334155]">
                 <h1
-                  className={`${robotoMono.className} text-3xl md:text-4xl font-bold text-transparent bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] bg-clip-text`}
+                  className={`${robotoMono.className} text-3xl md:text-4xl font-bold text-transparent bg-gradient-to-r from-orange-500 to-red-500 dark:from-[#3ABDF8] dark:to-[#818CF8] bg-clip-text`}
                 >
                   Chat Assistant
                 </h1>
@@ -163,11 +163,11 @@ export default function ChatPage() {
                     <div
                       className={`max-w-[70%] rounded-lg p-3 ${
                         message.role === "user"
-                          ? "bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white"
-                          : "bg-[#334155] text-[#C9CBD0]"
+                          ? "bg-gradient-to-r from-orange-500 to-red-500 dark:from-[#3ABDF8] dark:to-[#818CF8] text-white"
+                          : "bg-slate-100 dark:bg-[#334155] text-slate-700 dark:text-[#C9CBD0]"
                       }`}
                     >
-                      <div className={`${inter.className} prose prose-invert max-w-none`}>
+                      <div className={`${inter.className} prose dark:prose-invert max-w-none`}>
                         <Markdown>{message.content}</Markdown>
                       </div>
                     </div>
@@ -175,7 +175,7 @@ export default function ChatPage() {
                 ))}
                 {isLoading && (
                   <div className="flex justify-start">
-                    <div className="bg-[#334155] text-[#C9CBD0] max-w-[70%] rounded-lg p-3">
+                    <div className="bg-slate-100 dark:bg-[#334155] text-slate-700 dark:text-[#C9CBD0] max-w-[70%] rounded-lg p-3">
                       <p className={`${inter.className}`}>Thinking...</p>
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export default function ChatPage() {
 
               <form
                 onSubmit={handleSendMessage}
-                className="p-4 border-t border-[#334155]"
+                className="p-4 border-t border-gray-200 dark:border-[#334155]"
               >
                 <div className="flex gap-4">
                   <input
@@ -192,12 +192,12 @@ export default function ChatPage() {
                     value={inputMessage}
                     onChange={(e) => setInputMessage(e.target.value)}
                     placeholder="Type your message..."
-                    className="flex-1 p-3 text-[#C9CBD0] placeholder-[#818CF8] border border-[#334155] rounded-lg bg-[#1E293B] focus:outline-none focus:border-[#3ABDF8]"
+                    className="flex-1 p-3 text-slate-700 dark:text-[#C9CBD0] placeholder-slate-400 dark:placeholder-[#818CF8] border border-gray-200 dark:border-[#334155] rounded-lg bg-white dark:bg-[#1E293B] focus:outline-none focus:border-orange-500 dark:focus:border-[#3ABDF8]"
                     disabled={isLoading}
                   />
                   <button
                     type="submit"
-                    className={`bg-gradient-to-r from-[#3ABDF8] to-[#818CF8] text-white p-3 rounded-lg hover:opacity-90 focus:outline-none transition-all duration-200 ${
+                    className={`bg-gradient-to-r from-orange-500 to-red-500 dark:from-[#3ABDF8] dark:to-[#818CF8] text-white p-3 rounded-lg hover:opacity-90 focus:outline-none transition-all duration-200 ${
                       isLoading ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                     disabled={isLoading}

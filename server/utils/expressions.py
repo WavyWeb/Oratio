@@ -1,6 +1,3 @@
-#
-# expressions.py (Updated for Identical Output)
-#
 import cv2
 from deepface import DeepFace
 import pandas as pd
