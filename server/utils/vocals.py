@@ -1,41 +1,11 @@
 import torch
 import torchaudio
-from speechbrain.inference.interfaces import foreign_class
 import numpy as np
 from typing import Union
-from speechbrain.utils.fetching import fetch, LocalStrategy
 import os
 
-# --- Model Initialization ---
-print("Initializing SpeechBrain SER model...")
-
-# Define the model source and local save path
-source = "speechbrain/emotion-recognition-wav2vec2-IEMOCAP"
-savedir = "tmp_emotion_model"
-
-# Fetch all necessary model files locally to avoid symlink issues and ensure offline loading
-files_to_fetch = [
-    "hyperparams.yaml",
-    "custom_interface.py",
-    "wav2vec2.ckpt",
-    "model.ckpt",
-    "label_encoder.txt"
-]
-
-for file in files_to_fetch:
-    fetch(file, source=source, savedir=savedir, local_strategy=LocalStrategy.COPY)
-
-# Load the classifier using the custom interface for this specific model
-# No manual YAML modification needed; foreign_class handles loading from local dir
-emotion_recognizer = foreign_class(
-    source=savedir,
-    hparams_file="hyperparams.yaml",
-    pymodule_file="custom_interface.py",
-    classname="CustomEncoderWav2vec2Classifier",
-    savedir=savedir
-)
-
-print("SpeechBrain SER model initialized successfully.")
+# Models are loaded lazily through model_manager (no eager init here)
+from model_manager import model_manager
 
 
 EMOTION_MAP = {
@@ -48,6 +18,7 @@ def predict_emotion(audio_input: Union[str, np.ndarray], chunk_duration: float =
     """
     Predicts emotions from an audio file OR an in-memory audio array.
     """
+    emotion_recognizer = model_manager.get_emotion_recognizer()
     try:
         if isinstance(audio_input, str):
             signal, sample_rate = torchaudio.load(audio_input)

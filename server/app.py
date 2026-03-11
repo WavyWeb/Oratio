@@ -4,6 +4,7 @@ import re
 from routes.auth_routes import auth_bp
 from flask_cors import CORS
 import os
+import logging
 from dotenv import load_dotenv
 from werkzeug.utils import secure_filename
 import pandas as pd
@@ -12,13 +13,12 @@ import json
 import time
 import google.generativeai as genai
 
-# Import updated utility functions
-from utils.audioextraction import extract_audio_to_memory
-from utils.expressions import analyze_video_emotions
-from utils.transcription import speech_to_text_long
-from utils.vocals import predict_emotion
-from utils.vocabulary import evaluate_vocabulary
-from utils.linguistic_analysis import analyze_transcript_complete, generate_linguistic_summary
+# Heavy ML utilities are imported lazily inside /upload to keep startup fast.
+# The model_manager handles background pre-loading.
+from model_manager import model_manager
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 CORS(app)
@@ -78,6 +78,18 @@ app.register_blueprint(auth_bp)
 def home():
     return "Hello World"
 
+@app.route('/health')
+def health():
+    """Check which ML models are loaded and ready.
+    Models load on-demand when /upload is called — not at startup."""
+    return jsonify({
+        "status": "ok",
+        "mode": "on-demand",
+        "whisper_ready": model_manager.is_whisper_ready(),
+        "ser_ready": model_manager.is_ser_ready(),
+        "spacy_ready": model_manager.is_spacy_ready(),
+    })
+
 @app.route('/upload', methods=['POST'])
 def upload_file():
     if 'file' not in request.files:
@@ -99,6 +111,14 @@ def upload_file():
     file.save(file_path)
 
     try:
+        # Lazy-import heavy ML utilities only when actually needed
+        from utils.audioextraction import extract_audio_to_memory
+        from utils.expressions import analyze_video_emotions
+        from utils.transcription import speech_to_text_long
+        from utils.vocals import predict_emotion
+        from utils.vocabulary import evaluate_vocabulary
+        from utils.linguistic_analysis import analyze_transcript_complete, generate_linguistic_summary
+
         mode = "video" if file.filename.rsplit('.', 1)[1].lower() == 'mp4' else 'audio'
 
         # In-memory audio processing
@@ -156,6 +176,10 @@ def upload_file():
         report_data["_id"] = str(result.inserted_id)
         update_overall_reports(user_id)
         report_data = convert_objectid_to_string(report_data)
+
+        # After first upload, pre-warm remaining ML models in background
+        # so subsequent uploads are faster
+        model_manager.prewarm_remaining()
 
         return jsonify(report_data), 200
 
@@ -571,4 +595,8 @@ def generate_expression_report(emotion_analysis_str):
     return "Unable to generate expression report after multiple retries."
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    # Start background model loading so ML is warming up while Flask serves
+    # light requests (auth, reports, chat). Guard against double-load from reloader.
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true' or not app.debug:
+        model_manager.start_background_loading()
+    app.run(debug=True, threaded=True)

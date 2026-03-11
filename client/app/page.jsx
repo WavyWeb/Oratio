@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo, lazy, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -516,11 +516,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Use Cases Section - Slider */}
-      <UseCasesSlider />
+      {/* Use Cases Section - Slider (lazy loaded) */}
+      <Suspense fallback={<div className="py-20" />}>
+        <UseCasesSlider />
+      </Suspense>
 
-      {/* Testimonials Section - Slider */}
-      <TestimonialsSlider />
+      {/* Testimonials Section - Slider (lazy loaded) */}
+      <Suspense fallback={<div className="py-20" />}>
+        <TestimonialsSlider />
+      </Suspense>
 
       {/* CTA Section */}
       <section className="py-20 bg-gradient-to-br from-slate-50 to-white dark:from-slate-900 dark:to-slate-950 relative overflow-hidden">

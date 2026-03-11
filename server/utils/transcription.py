@@ -1,26 +1,20 @@
 #
-# transcription.py 
+# transcription.py  — lazy-loaded via model_manager
 #
 import torch
-from transformers import WhisperProcessor, WhisperForConditionalGeneration
 import warnings
 from typing import Union, List
 import numpy as np
 
 warnings.filterwarnings("ignore", category=UserWarning, module='torchaudio')
 
-# --- Model Initialization ---
-MODEL_NAME = "openai/whisper-medium"
+# Models are loaded lazily through model_manager (no eager init here)
+from model_manager import model_manager
 
-print("Initializing transcription model...")
-processor = WhisperProcessor.from_pretrained(MODEL_NAME)
-model = WhisperForConditionalGeneration.from_pretrained(
-    MODEL_NAME, 
-    torch_dtype=torch.float16 if torch.cuda.is_available() else torch.float32
-)
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
-model.to(device)
-print(f"Transcription model initialized successfully on {device}.")
+
+def _get_model():
+    """Return (processor, model, device) from the shared model manager."""
+    return model_manager.get_whisper()
 
 def chunk_audio(audio: np.ndarray, chunk_duration_s: int = 30, overlap_s: float = 0.5, sample_rate: int = 16000) -> List[np.ndarray]:
     """
@@ -53,14 +47,8 @@ def chunk_audio(audio: np.ndarray, chunk_duration_s: int = 30, overlap_s: float 
 def transcribe_chunk(audio_chunk: np.ndarray, sample_rate: int = 16000) -> str:
     """
     Transcribe a single audio chunk using Whisper.
-    
-    Args:
-        audio_chunk: Audio data for a single chunk
-        sample_rate: Sample rate (should be 16000 for Whisper)
-    
-    Returns:
-        Transcribed text for the chunk
     """
+    processor, model, device = _get_model()
     try:
         # Ensure audio chunk is the right type
         if not isinstance(audio_chunk, np.ndarray):

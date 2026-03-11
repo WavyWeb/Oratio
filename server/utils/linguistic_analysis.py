@@ -1,4 +1,4 @@
-"""
+﻿"""
 Linguistic Analysis Module for Speech Evaluation
 Provides detailed analysis of transcription including filler words, speech patterns,
 vocabulary richness, and linguistic features.
@@ -12,16 +12,14 @@ import re
 from collections import Counter
 from typing import Dict, List, Tuple, Any
 import numpy as np
-import spacy
 
-# Load spaCy model
-try:
-    nlp = spacy.load("en_core_web_sm")
-except OSError:
-    print("Downloading spaCy model 'en_core_web_sm'...")
-    import subprocess
-    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
-    nlp = spacy.load("en_core_web_sm")
+# Models are loaded lazily through model_manager (no eager init here)
+from model_manager import model_manager
+
+
+def _nlp(text):
+    """Convenience wrapper: get spaCy nlp from model_manager and call it."""
+    return model_manager.get_spacy_nlp()(text)
 
 # ============================================================================
 # WORD LISTS AND PATTERNS
@@ -199,7 +197,7 @@ def get_sentences(text: str) -> List[str]:
     Returns:
         List of sentences
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     sentences = [sent.text.strip() for sent in doc.sents]
     return sentences
 
@@ -214,7 +212,7 @@ def get_words(text: str) -> List[str]:
     Returns:
         List of words
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     words = [token.text for token in doc if token.is_alpha]
     return words
 
@@ -229,7 +227,7 @@ def get_lemmatized_words(text: str) -> List[str]:
     Returns:
         List of lemmatized words
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     lemmas = [token.lemma_.lower() for token in doc if token.is_alpha and not token.is_stop]
     return lemmas
 
@@ -261,7 +259,7 @@ def detect_passive_voice(text: str) -> Dict[str, Any]:
     Returns:
         Dictionary with passive voice count and examples
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     passive_sentences = []
     
     for sent in doc.sents:
@@ -524,7 +522,7 @@ def detect_repetitive_sentence_starts(text: str) -> Dict[str, int]:
     Returns:
         Dictionary of repetitive starts and their counts
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     sentences = list(doc.sents)
     
     if len(sentences) < 3:
@@ -559,7 +557,7 @@ def analyze_pos_distribution(text: str) -> Dict[str, Any]:
     Returns:
         Dictionary with POS metrics
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     
     pos_counts = Counter([token.pos_ for token in doc if token.is_alpha])
     total_pos = sum(pos_counts.values())
@@ -594,7 +592,7 @@ def extract_named_entities(text: str) -> Dict[str, Any]:
     Returns:
         Dictionary with entity information
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     
     entities = [(ent.text, ent.label_) for ent in doc.ents]
     entity_counts = Counter([ent.label_ for ent in doc.ents])
@@ -624,7 +622,7 @@ def analyze_vocabulary_richness(text: str) -> Dict[str, Any]:
     Returns:
         Dictionary with vocabulary metrics
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     
     # Get all words (tokens that are alphabetic)
     words = [token.text for token in doc if token.is_alpha]
@@ -679,7 +677,7 @@ def analyze_sentence_structure(text: str) -> Dict[str, Any]:
     Returns:
         Dictionary with sentence metrics
     """
-    doc = nlp(text)
+    doc = _nlp(text)
     sentences = list(doc.sents)
     
     if not sentences:

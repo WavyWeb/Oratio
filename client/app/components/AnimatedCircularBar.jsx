@@ -13,7 +13,7 @@ export default function AnimatedCircularBar({
   duration = 1200,
   className,
 }) {
-  const [animatedValue, setAnimatedValue] = useState(0);
+  const [displayValue, setDisplayValue] = useState(0);
   const [hasAnimated, setHasAnimated] = useState(false);
   const ref = useRef(null);
 
@@ -25,6 +25,7 @@ export default function AnimatedCircularBar({
       ([entry]) => {
         if (entry.isIntersecting && !hasAnimated) {
           setHasAnimated(true);
+          observer.disconnect();
         }
       },
       { threshold: 0.3 }
@@ -34,43 +35,48 @@ export default function AnimatedCircularBar({
     return () => observer.disconnect();
   }, [hasAnimated]);
 
+  // Single rAF-based animation instead of setInterval
   useEffect(() => {
     if (!hasAnimated) return;
 
     const target = Math.round(targetValue);
     if (target === 0) {
-      setAnimatedValue(0);
+      setDisplayValue(0);
       return;
     }
 
-    const steps = 60;
-    const stepDuration = duration / steps;
-    let current = 0;
+    let animationId;
+    const startTime = performance.now();
 
-    const timer = setInterval(() => {
-      current++;
-      // Ease-out: fast start, slow end
-      const progress = 1 - Math.pow(1 - current / steps, 3);
-      const val = Math.round(progress * target);
-      setAnimatedValue(Math.min(val, target));
-      if (current >= steps) clearInterval(timer);
-    }, stepDuration);
+    const animate = (now) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const val = Math.round(eased * target);
+      setDisplayValue(Math.min(val, target));
 
-    return () => clearInterval(timer);
+      if (progress < 1) {
+        animationId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationId);
   }, [hasAnimated, targetValue, duration]);
 
   return (
     <div ref={ref} className={className}>
       <CircularProgressbar
-        value={animatedValue}
+        value={displayValue}
         maxValue={maxValue}
-        text={`${animatedValue}${suffix}`}
+        text={`${displayValue}${suffix}`}
         styles={buildStyles({
           pathColor,
           textColor,
           trailColor,
           textSize,
-          pathTransitionDuration: 0.05,
+          pathTransitionDuration: 0.8,
         })}
       />
     </div>

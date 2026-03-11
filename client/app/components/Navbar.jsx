@@ -33,8 +33,11 @@ const Navbar = () => {
     const pathname = usePathname();
     const router = useRouter();
     const { theme, toggleTheme } = useTheme();
+    const profileFetchedRef = React.useRef(false);
 
-    const fetchProfilePhoto = async () => {
+    const fetchProfilePhoto = async (force = false) => {
+        // Skip if already fetched (unless forced)
+        if (profileFetchedRef.current && !force) return;
         try {
             const token = localStorage.getItem('token');
             if (!token) return;
@@ -49,6 +52,7 @@ const Navbar = () => {
                 setUsername(data.fullName);
                 localStorage.setItem('username', data.fullName);
             }
+            profileFetchedRef.current = true;
         } catch { /* silent */ }
     };
 
@@ -60,6 +64,7 @@ const Navbar = () => {
             localStorage.removeItem('userId');
             localStorage.removeItem('email');
             setIsLoggedIn(false);
+            profileFetchedRef.current = false;
             return;
         }
         const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -77,7 +82,7 @@ const Navbar = () => {
     useEffect(() => {
         const handleProfileUpdate = () => {
             setUsername(localStorage.getItem('username') || 'User');
-            fetchProfilePhoto();
+            fetchProfilePhoto(true); // force refresh on explicit update
         };
         window.addEventListener('profileUpdated', handleProfileUpdate);
         return () => window.removeEventListener('profileUpdated', handleProfileUpdate);

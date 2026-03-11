@@ -1,15 +1,57 @@
 "use client";
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 
 const DashboardDataContext = createContext(null);
 
+// Cache data to avoid refetching on re-mounts (e.g. route changes)
+const cache = { reports: null, overallScores: null, userId: null, ts: 0 };
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
 export function DashboardDataProvider({ children }) {
-  const [reports, setReports] = useState([]);
-  const [overallScores, setOverallScores] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [reports, setReports] = useState(cache.reports || []);
+  const [overallScores, setOverallScores] = useState(cache.overallScores);
+  const [loading, setLoading] = useState(!cache.reports);
   const [userId, setUserId] = useState(null);
+  const fetchedRef = useRef(false);
+
+  const fetchData = useCallback((uid) => {
+    // Use cache if fresh
+    if (cache.userId === uid && cache.reports && (Date.now() - cache.ts) < CACHE_TTL) {
+      setReports(cache.reports);
+      setOverallScores(cache.overallScores);
+      setLoading(false);
+      return;
+    }
+
+    const token = localStorage.getItem('token');
+    const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
+    const headers = { 'Authorization': `Bearer ${token}` };
+
+    setLoading(true);
+    Promise.all([
+      fetch(`${API}/user-reports-list?userId=${encodeURIComponent(uid)}`, { headers }).then(r => r.ok ? r.json() : []),
+      fetch(`${API}/user-reports?userId=${encodeURIComponent(uid)}`, { headers }).then(r => r.ok ? r.json() : null),
+    ])
+      .then(([reportsList, overall]) => {
+        const reps = Array.isArray(reportsList) ? reportsList : [];
+        setReports(reps);
+        setOverallScores(overall);
+        // Update cache
+        cache.reports = reps;
+        cache.overallScores = overall;
+        cache.userId = uid;
+        cache.ts = Date.now();
+      })
+      .catch((err) => {
+        console.error('DashboardDataContext fetch error:', err);
+      })
+      .finally(() => setLoading(false));
+  }, []);
 
   useEffect(() => {
+    if (fetchedRef.current) return;
+    fetchedRef.current = true;
+
     const rawUserId = localStorage.getItem('userId');
     const uid = rawUserId && rawUserId !== 'undefined' && rawUserId !== 'null' && rawUserId.trim() !== '' ? rawUserId : null;
     setUserId(uid);
@@ -19,26 +61,20 @@ export function DashboardDataProvider({ children }) {
       return;
     }
 
-    const token = localStorage.getItem('token');
-    const API = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5000';
-    const headers = { 'Authorization': `Bearer ${token}` };
+    fetchData(uid);
+  }, [fetchData]);
 
-    Promise.all([
-      fetch(`${API}/user-reports-list?userId=${encodeURIComponent(uid)}`, { headers }).then(r => r.ok ? r.json() : []),
-      fetch(`${API}/user-reports?userId=${encodeURIComponent(uid)}`, { headers }).then(r => r.ok ? r.json() : null),
-    ])
-      .then(([reportsList, overall]) => {
-        setReports(Array.isArray(reportsList) ? reportsList : []);
-        setOverallScores(overall);
-      })
-      .catch((err) => {
-        console.error('DashboardDataContext fetch error:', err);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  // Allow children to trigger a refresh (e.g. after new upload)
+  const refresh = useCallback(() => {
+    const uid = localStorage.getItem('userId');
+    if (uid) {
+      cache.ts = 0; // invalidate cache
+      fetchData(uid);
+    }
+  }, [fetchData]);
 
   return (
-    <DashboardDataContext.Provider value={{ reports, overallScores, loading, userId }}>
+    <DashboardDataContext.Provider value={{ reports, overallScores, loading, userId, refresh }}>
       {children}
     </DashboardDataContext.Provider>
   );
