@@ -19,10 +19,15 @@ ENV/
 /output/
 /pretrained_models/
 /wav2vec2_checkpoints/
+server/wav2vec2_checkpoints/
+**/wav2vec2_checkpoints/
 *.ckpt
 *.pt
 *.pth
 *.whl
+*.bin
+*.safetensors
+*.safetensors.index.json
 
 ## OS / Editors
 .DS_Store
